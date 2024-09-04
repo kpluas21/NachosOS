@@ -1,0 +1,15 @@
+Kevin Pluas
+Project 0 Report
+08/27/2024
+
+a) I used wget to retrieve the Nachos tar. After that, I compiled Nachos without issue using the nachos.cs.fiu.edu machine. 
+It was accessed from a Windows 10 machine using PuTTy   
+
+b) The tests ran fine without issue. The first test simply ran Halt() which
+performs a syscall to halt the system before cleaning up. The second test
+executed the same program but in single-step mode, showing the values of each
+register at each tick. 
+
+c) Threads in Nachos are implemented as a data structure that contains several pieces of information on the current state of a process
+in execution. For instance, it contains storage for the program counter, execution stack, and so on. It also enumerates the current state of
+the process such as RUNNING, READY, etc. 
