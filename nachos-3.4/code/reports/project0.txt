@@ -26,3 +26,17 @@ while ./nachos -s -x ../test/halt did the same in single-step mode, showing regi
 
 c) In Nachos, Thread class represents threads. Threads have their own execution stacks and states (JUST_CREATED, READY, RUNNING, BLOCKED). 
 Threads are managed using a ready list and can perform operations like Fork , Yield to give up the CPU, Sleep to block until an event occurs, and Finish to terminate and clean up resources.
+
+
+Myrah Bisht
+
+a) I used Windows PowerShell to connect to the wolf.cs.fiu.edu machine and installed Nachos by following the steps in the project file.
+I completed the steps without facing any issues. 
+
+b) The test ran successfully without any issues. Running ./nachos -x ../test/halt executed the halt user program, which halted the 
+system by making a system call. Adding the -s argument like ./nachos -s -x ../test/halt ran the program in single-step mode, showing
+ the values of all the registers at each tick.
+
+c) Threads are managed using the Thread class, which keeps track of their execution details such as the program counter, 
+stack, and states. Each thread operates independently but shares the process’s address space, and they are 
+organized using a ready list. 
