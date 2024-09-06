@@ -13,3 +13,16 @@ register at each tick.
 c) Threads in Nachos are implemented as a data structure that contains several pieces of information on the current state of a process
 in execution. For instance, it contains storage for the program counter, execution stack, and so on. It also enumerates the current state of
 the process such as RUNNING, READY, etc. 
+
+
+Paras Parani
+
+a) I used VS Code to connect to the wolf.cs.fiu.edu machine. I then followed the steps outlined in the project description to download and compile Nachos, 
+which completed without any issues.
+
+b) All commands ran successfully. Running ./nachos inside threads executed the code between #ifdef THREADS and #endif in main.cc, updating testnum, creating a new thread, and running SimpleThread. 
+The main and new threads alternated printing messages and yielding control for 5 iterations. Running ./nachos -x ../test/halt executed the Halt function to stop the machine, 
+while ./nachos -s -x ../test/halt did the same in single-step mode, showing register values at each tick.
+
+c) In Nachos, Thread class represents threads. Threads have their own execution stacks and states (JUST_CREATED, READY, RUNNING, BLOCKED). 
+Threads are managed using a ready list and can perform operations like Fork , Yield to give up the CPU, Sleep to block until an event occurs, and Finish to terminate and clean up resources.
