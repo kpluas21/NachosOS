@@ -1,6 +1,7 @@
-Kevin Pluas
 Project 0 Report
 08/27/2024
+
+Kevin Pluas
 
 a) I used wget to retrieve the Nachos tar. After that, I compiled Nachos without issue using the nachos.cs.fiu.edu machine. 
 It was accessed from a Windows 10 machine using PuTTy   
