@@ -11,6 +11,8 @@
 
 #include "copyright.h"
 #include "system.h"
+#include <cstdio>
+#include "synch.h"
 
 // testnum is set in main.cc
 int testnum = 1;
@@ -23,17 +25,57 @@ int testnum = 1;
 //	"which" is simply a number identifying the thread, for debugging
 //	purposes.
 //----------------------------------------------------------------------
-
-void
-SimpleThread(int which)
+//HW1_LOCKS 
+int SharedVariable;
+Semaphore *sem = new Semaphore("Shared Variable Semaphore", 1);
+Lock *loc = new Lock("Shared Variable Lock");
+void SimpleThread(int which)
 {
-    int num;
-    
+    int num, val;
+
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
     for (num = 0; num < 5; num++) {
-	printf("*** thread %d looped %d times\n", which, num);
+        #ifdef HW1_SEMAPHORES
+        sem->P();
+        #endif
+        #ifdef HW1_LOCKS 
+        loc->Acquire();
+        #endif
+
+        val = SharedVariable;
+	printf("*** thread %d sees value %d\n", which, val);
         currentThread->Yield();
-    }
-}
+        SharedVariable = val+1;
+        #ifdef HW1_SEMAPHORES
+        sem->V();
+        #endif
+        #ifdef HW1_LOCKS 
+        loc->Release();
+        #endif
+        currentThread->Yield();
+
+        
+        
+        }
+        
+        #ifdef HW1_LOCKS 
+        loc->Acquire();
+        #endif
+        #ifdef HW1_SEMAPHORES
+        sem->P();
+        #endif
+        val = SharedVariable;
+        printf("Thread %d sees final value %d\n", which, val);
+        #ifdef HW1_SEMAPHORES
+        sem->V();
+        #endif
+        #ifdef HW1_LOCKS 
+        loc->Release();
+        #endif
+
+        (void) interrupt->SetLevel(oldLevel);
+        }
+    
 
 //----------------------------------------------------------------------
 // ThreadTest1
@@ -45,7 +87,7 @@ void
 ThreadTest1()
 {
     DEBUG('t', "Entering ThreadTest1");
-
+    
     Thread *t = new Thread("forked thread");
 
     t->Fork(SimpleThread, 1);
@@ -58,15 +100,28 @@ ThreadTest1()
 //----------------------------------------------------------------------
 
 void
-ThreadTest()
+ThreadTest(int n)
 {
-    switch (testnum) {
-    case 1:
-	ThreadTest1();
-	break;
-    default:
-	printf("No test specified.\n");
-	break;
+    for(int i=1; i<=n; i++){
+        DEBUG('m', "Forking thread %d\n",i);
+        char threadName[20];
+        // std::string threadName = "forked thread " + std::to_string(i);
+         snprintf(threadName, sizeof(threadName), "forked thread %d", i);
+        //  printf(threadName);
+        Thread *t = new Thread(threadName);
+        // printf(t->getName());
+
+        t->Fork(SimpleThread, i);
+        DEBUG('m', "Forking thread %d\n complete",i);
     }
+    SimpleThread(0);
+    // switch (testnum) {
+    // case 1:
+	// ThreadTest1();
+	// break;
+    // default:
+	// printf("No test specified.\n");
+	// break;
+    // }
 }
 

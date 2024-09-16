@@ -52,6 +52,7 @@
 
 #include "utility.h"
 #include "system.h"
+// #include <iostream> 
 
 #ifdef THREADS
 extern int testnum;
@@ -59,10 +60,12 @@ extern int testnum;
 
 // External functions used by this file
 
-extern void ThreadTest(void), Copy(char *unixFile, char *nachosFile);
+extern void ThreadTest(int num), Copy(char *unixFile, char *nachosFile);
 extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
+
+
 
 //----------------------------------------------------------------------
 // main
@@ -83,6 +86,15 @@ main(int argc, char **argv)
 {
     int argCount;			// the number of arguments 
 					// for a particular command
+	// std::cout << "Command-line arguments BEFORE Initialize:" << std::endl;
+	// for (int i = 0; i < argc; i++) {
+    //     std::cout << "Argument " << i << ": " << argv[i] << std::endl;
+    //     std::cout << "Address of Argument " << i << ": " << static_cast<void*>(argv[i]) << std::endl;
+    // }
+	// for (int i = 0; i < argc; i++) {
+    //     std::cout << "Argument " << i << ": " << argv[i] << std::endl;
+    //     std::cout << "Address of Argument " << i << ": " << static_cast<void*>(argv[i]) << std::endl;
+    // }
 
     DEBUG('t', "Entering main");
     (void) Initialize(argc, argv);
@@ -100,8 +112,8 @@ main(int argc, char **argv)
         break;
       }
     }
-
-    ThreadTest();
+	int n = 2;
+    ThreadTest(n);
 #endif
 
     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
