@@ -132,7 +132,9 @@ class Condition {
 					// these operations
 
   private:
-    char* name;
+    const char* name;
+    List* queue;
+    bool isFree;
     // plus some other stuff you'll need to define
 };
 #endif // SYNCH_H

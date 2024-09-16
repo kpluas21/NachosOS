@@ -100,19 +100,24 @@ main(int argc, char **argv)
     (void) Initialize(argc, argv);
     
 #ifdef THREADS
-    for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
+    int n = 1; //the default number of threads
+	
+	for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
       argCount = 1;
       switch (argv[0][1]) {
       case 'q':
         testnum = atoi(argv[1]);
         argCount++;
         break;
+	  case 't': 		   //Allow the user to input a number of threads to be created. 
+		n = atoi(argv[1]); //Otherwise, default to a single thread
+		argCount++;
+		break;
       default:
         testnum = 1;
         break;
       }
     }
-	int n = 2;
     ThreadTest(n);
 #endif
 
