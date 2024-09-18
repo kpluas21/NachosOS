@@ -104,6 +104,7 @@ Lock::Lock(const char *debugName)
     name = debugName;
     lockHeldBy = NULL;
     queue = new List;
+    isFree = TRUE; // By default, a lock is free.
 }
 Lock::~Lock()
 {
@@ -112,33 +113,28 @@ Lock::~Lock()
 void Lock::Acquire()
 {
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
-    if (lockHeldBy != NULL)
+
+    while (lockHeldBy != NULL)
     {
         queue->Append((void *)currentThread);
         currentThread->Sleep();
     }
-    else
-    {
-        lockHeldBy = currentThread;
-    }
+    lockHeldBy = currentThread;
+
     (void)interrupt->SetLevel(oldLevel);
 }
 void Lock::Release()
 {
+    Thread *thread;
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
-    // if(lockHeldBy==currentThread){
 
-    if (!queue->IsEmpty())
+    thread = (Thread *)queue->Remove();
+    if (thread != NULL)
     {
-        Thread *thread = (Thread *)queue->Remove();
         scheduler->ReadyToRun(thread);
     }
     lockHeldBy = NULL;
 
-    // }
-    // else {
-    //     // ASSERT(FALSE);
-    // }
     (void)interrupt->SetLevel(oldLevel);
 }
 

@@ -80,6 +80,7 @@ class Lock {
   private:
     const char* name;	
     List *queue; 
+    bool isFree;
     Thread* lockHeldBy;			// for debugging
     // plus some other stuff you'll need to define
 };
@@ -121,7 +122,7 @@ class Condition {
     Condition(const char* debugName);		// initialize condition to 
 					// "no one waiting"
     ~Condition();			// deallocate the condition
-    char* getName() { return (name); }
+    const char* getName() { return (name); }
     
     void Wait(Lock *conditionLock); 	// these are the 3 operations on 
 					// condition variables; releasing the 

@@ -28,15 +28,20 @@ int testnum = 1;
 
 // HW1_LOCKS
 
+    int count = 0;
+
+int NumThreads;
+int BarrierCount = 0;
 int SharedVariable;
 Semaphore *sem = new Semaphore("Shared Variable Semaphore", 1);
+Semaphore *barrierSem = new Semaphore("Thread Barrier Semaphor", 0);
 Lock *loc = new Lock("Shared Variable Lock");
 
 void SimpleThread(int which)
 {
     int num, val;
 
-    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+    // IntStatus oldLevel = interrupt->SetLevel(IntOff);
     for (num = 0; num < 5; num++)
     {
 #ifdef HW1_SEMAPHORES
@@ -45,11 +50,10 @@ void SimpleThread(int which)
 #ifdef HW1_LOCKS
         loc->Acquire();
 #endif
-
-        val = SharedVariable;
+        val = SharedVariable; 
         printf("*** thread %d sees value %d\n", which, val);
         currentThread->Yield();
-        SharedVariable = val + 1;
+        SharedVariable = val + 1;     //Increment sharedvar
 #ifdef HW1_SEMAPHORES
         sem->V();
 #endif
@@ -58,6 +62,22 @@ void SimpleThread(int which)
 #endif
         currentThread->Yield();
     }
+
+//The following is a thread barrier that effectively stops the current thread after finishing its loop.
+//It waits untill all other threads are done before printing out the true final value.
+#ifdef HW1_SEMAPHORES
+    sem->P();
+    count = count + 1;
+    sem->V();
+
+    if(count == NumThreads)
+    {
+        barrierSem->V();
+    }
+
+    barrierSem->P();
+    barrierSem->V();
+#endif
 
 #ifdef HW1_LOCKS
     loc->Acquire();
@@ -73,8 +93,7 @@ void SimpleThread(int which)
 #ifdef HW1_LOCKS
     loc->Release();
 #endif
-
-    (void)interrupt->SetLevel(oldLevel);
+    // (void)interrupt->SetLevel(oldLevel);
 }
 
 //----------------------------------------------------------------------
@@ -100,6 +119,7 @@ void ThreadTest1()
 
 void ThreadTest(int n)
 {
+    NumThreads = n;
     for (int i = 0; i < n; i++)
     {
         DEBUG('m', "Forking thread %d\n", i);
