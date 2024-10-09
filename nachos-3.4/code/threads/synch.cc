@@ -127,15 +127,19 @@ void Lock::Release()
 {
     Thread *thread;
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
-
-    thread = (Thread *)queue->Remove();
-    if (thread != NULL)
-    {
-        scheduler->ReadyToRun(thread);
-    }
-    lockHeldBy = NULL;
-
+    if (lockHeldBy==currentThread){
+        thread = (Thread *)queue->Remove();
+        if (thread != NULL)
+        {
+            scheduler->ReadyToRun(thread);
+        }
+        lockHeldBy = NULL;
+    }   
     (void)interrupt->SetLevel(oldLevel);
+}
+
+bool Lock::isHeldByCurrentThread() {
+    return lockHeldBy == currentThread;  // Check if the lock is held by the current thread
 }
 
 Condition::Condition(const char *debugName)
@@ -148,6 +152,44 @@ Condition::~Condition()
     delete queue;
 }
 
-void Condition::Wait(Lock *conditionLock) { ASSERT(FALSE); }
-void Condition::Signal(Lock *conditionLock) {}
-void Condition::Broadcast(Lock *conditionLock) {}
+void Condition::Wait(Lock *conditionLock) { 
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+    //check if calling thread holds the lock
+    ASSERT(conditionLock->isHeldByCurrentThread()); 
+
+    // Realse the lock
+    conditionLock->Release();
+
+    //add thread to queue
+    queue->Append((void *)currentThread);
+
+    currentThread->Sleep();
+
+    // reaquire the lock
+    conditionLock->Acquire();
+    (void)interrupt->SetLevel(oldLevel);
+
+    }
+void Condition::Signal(Lock *conditionLock) {
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+    // check if calling thread holds the lock
+    ASSERT(conditionLock->isHeldByCurrentThread()); 
+    //Dequeue one of the threads in the queue
+    Thread *thread = (Thread *)queue->Remove();
+    if (thread != NULL)
+        {
+            scheduler->ReadyToRun(thread);
+        }
+    (void)interrupt->SetLevel(oldLevel);
+}
+void Condition::Broadcast(Lock *conditionLock) {
+    // check if calling thread holds the lock
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+    ASSERT(conditionLock->isHeldByCurrentThread()); 
+    while (!queue->IsEmpty()) {
+        Thread* thread = (Thread*)queue->Remove();   // Remove all waiting threads from the queue
+        scheduler->ReadyToRun(thread);               // Make them ready to run
+    }
+    (void)interrupt->SetLevel(oldLevel);
+
+}

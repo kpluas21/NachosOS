@@ -62,6 +62,7 @@ extern int testnum;
 
 extern void ThreadTest(int num), Copy(char *unixFile, char *nachosFile);
 extern void SemaphorePing(void) ;
+extern void Ping(void);
 extern void LockTest(void) ;
 extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out);
@@ -123,7 +124,8 @@ main(int argc, char **argv)
 
     }
     // ThreadTest(n);
-	LockTest();
+	// LockTest();
+	Ping();
 	// SemaphorePing();
 
 #endif
