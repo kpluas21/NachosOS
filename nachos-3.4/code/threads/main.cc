@@ -64,6 +64,7 @@ extern void ThreadTest(int num), Copy(char *unixFile, char *nachosFile);
 extern void SemaphorePing(void) ;
 extern void Ping(void);
 extern void LockTest(void) ;
+extern void ElevatorTest(int numFloors, int numPersons);
 extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
@@ -125,7 +126,8 @@ main(int argc, char **argv)
     }
     // ThreadTest(n);
 	// LockTest();
-	Ping();
+	// Ping();
+	ElevatorTest(5,5);
 	// SemaphorePing();
 
 #endif
