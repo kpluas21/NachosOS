@@ -5,6 +5,11 @@
 
 void ElevatorTest(int numFloors, int numPersons) {
 
+    if(numFloors <= 0)
+    {
+        printf("Invalid number of floors entered.\n");
+        return;
+    }
     // Create elevator thread
     Elevator(numFloors);
 
