@@ -2,9 +2,28 @@
 #include "system.h"
 #include "synch.h"
 
-int nextPErsonID = 1;
+struct personThread
+{
+    int id;
+    int atFloor;
+    int toFloor;
+};
+
+struct elevatorThread
+{
+    int numFloors;
+    int currentFloor;
+    int numPeopleIn;
+};
+
+typedef struct personThread pThread;
+typedef struct elevatorThread eThread;
+
+int nextPersonID = 1;
 
 Lock *personIDLock = new Lock("PersonIDLock");
+Lock *elevatorLock = new Lock("ElevatorLock");
+Condition *elevatorCondition = new Condition("ElevatorCondition");
 
 typedef struct Person
 {
@@ -13,42 +32,70 @@ typedef struct Person
     int toFloor;
 } Person;
 
+List *waitingList = new List();
+
 void ElevatorThread(int numFloors)
 {
-    printf("Elevator with %d floors was created\n", numFloors);
+    eThread elev;
+    elev.numFloors = numFloors;
+    elev.numPeopleIn = 0;
+    elev.currentFloor = 1;
+
+    while (true)
+    {
+        elevatorLock->Acquire();
+
+        // Check if there are any waiting people
+        if (!waitingList->IsEmpty())
+        {
+            Person *p = (Person *)waitingList->Remove();
+            printf("Elevator moving to pick up person %d at floor %d\n", p->id, p->atFloor);
+            elev.currentFloor = p->atFloor;
+            printf("Elevator picked up person %d\n", p->id);
+            printf("Elevator moving to drop off person %d at floor %d\n", p->id, p->toFloor);
+            elev.currentFloor = p->toFloor;
+            printf("Elevator dropped off person %d\n", p->id);
+        }
+
+        elevatorCondition->Wait(elevatorLock);
+        elevatorLock->Release();
+    }
 }
 
 void Elevator(int numFloors)
 {
-
-    // create Elevator Thread
     Thread *t = new Thread("elevator thread");
-    t->Fork(ElevatorThread, numFloors);
+    t->Fork((VoidFunctionPtr)ElevatorThread, numFloors);
 }
 
 void PersonThread(int person)
 {
-
     Person *p = (Person *)person;
-    printf("person %d wants to go from  floor %d to %d\n", (int)p->id, p->atFloor, p->toFloor);
+    printf("Person %d wants to go from floor %d to %d\n", p->id, p->atFloor, p->toFloor);
+
+    elevatorLock->Acquire();
+    waitingList->Append((void *)p);
+    elevatorCondition->Signal(elevatorLock);
+    elevatorLock->Release();
 }
 
 int getNextPersonID()
 {
-    return nextPErsonID++; // it will return current value and update the value by one for next person
+    personIDLock->Acquire();
+    int id = nextPersonID++;
+    personIDLock->Release();
+    return id;
 }
 
 void ArrivingGoingFromTo(int atFloor, int toFloor)
 {
-
-    // create Person struct
-
     Person *p = new Person;
     p->id = getNextPersonID();
     p->atFloor = atFloor;
     p->toFloor = toFloor;
 
-    // Create Person Thread
-    Thread *t = new Thread("person " + p->id);
-    t->Fork(PersonThread, (int)p);
+    char threadName[20];
+    sprintf(threadName, "person %d", p->id);
+    Thread *t = new Thread(threadName);
+    t->Fork((VoidFunctionPtr)PersonThread, (int)p);
 }
