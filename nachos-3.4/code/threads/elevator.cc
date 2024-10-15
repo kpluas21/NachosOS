@@ -49,12 +49,14 @@ void ElevatorThread(int numFloors)
         if (!waitingList->IsEmpty())
         {
             Person *p = (Person *)waitingList->Remove();
-            printf("Elevator moving to pick up person %d at floor %d\n", p->id, p->atFloor);
+            printf("Person %d got into the elevator\n", p->id);
             elev.currentFloor = p->atFloor;
-            printf("Elevator picked up person %d\n", p->id);
-            printf("Elevator moving to drop off person %d at floor %d\n", p->id, p->toFloor);
+            //Waiting loop of 50 tics to simulate the motion of the elevator
+            for(int i = 0; i < 50; i++) {}
             elev.currentFloor = p->toFloor;
-            printf("Elevator dropped off person %d\n", p->id);
+            printf("Elevator arrives on floor %d.\n", elev.currentFloor);
+            printf("Person %d got off the elevator\n", p->id);
+
         }
 
         elevatorCondition->Wait(elevatorLock);
