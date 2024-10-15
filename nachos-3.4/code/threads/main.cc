@@ -114,15 +114,19 @@ int main(int argc, char **argv)
 	}
 
 #ifdef HW1_LOCKS 
-	ThreadTest(n);
-	//LockTest();
-#endif
+	// ThreadTest(n);
+	LockTest();
+	Ping();
+#elif HW1_ELEVATOR
+	ElevatorTest(10, 20);
+#elif HW1_SEMAPHORES
+	// ThreadTest(n);
+	SemaphorePing();
 	// Ping();
-#ifdef HW1_ELEVATOR
-	ElevatorTest(5, 5);
-#endif
-	// SemaphorePing();
-
+#else
+	ThreadTest(5);
+#endif 
+	
 #endif
 
 	for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount)
