@@ -124,7 +124,7 @@ int main(int argc, char **argv)
 	SemaphorePing();
 	// Ping();
 #else
-	ThreadTest(5);
+	ThreadTest(5); 
 #endif 
 	
 #endif
