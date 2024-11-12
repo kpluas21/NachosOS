@@ -60,6 +60,9 @@ SwapHeader (NoffHeader *noffH)
 //	"executable" is the file containing the object code to load into memory
 //----------------------------------------------------------------------
 
+// noffh: nachos object file formate header
+// coff: common object file formate
+
 AddrSpace::AddrSpace(OpenFile *executable)
 {
     NoffHeader noffH;
