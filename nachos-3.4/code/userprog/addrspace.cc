@@ -121,6 +121,58 @@ AddrSpace::AddrSpace(OpenFile *executable)
 
 }
 
+TranslationEntry* AddrSpace::GetPageTable() {
+    return pageTable;
+}
+
+unsigned int AddrSpace::GetNumPages(){
+    return numPages;
+}
+
+//----------------------------------------------------------------------
+// AddrSpace::AddrSpace
+//   create an address space as a copy of existing one
+//----------------------------------------------------------------------
+
+AddrSpace::AddrSpace(AddrSpace* space) {
+    // 1. Find how big the source address space is 
+
+    unsigned int n = space->GetNumPages();
+
+    //Acquire mmLock
+
+    mmLock->Acquire();
+
+    // 2. check if there is enough free memory to make the copy. IF not, fail
+
+    ASSERT(n <= mm->GetFreePageCount());
+
+    // 3. Create a new pagetable of the same size as source addr space
+    pageTable = new TranslationEntry[n];
+    
+
+    // 4. Make a copy of the PTEs but allocate new physical pages
+    TranslationEntry* ppt = space->GetPageTable();
+    for (int i = 0; i < numPages; i++) {
+        pageTable[i].virtualPage = ppt[i].virtualPage;	// for now, virtual page # = phys page #
+        pageTable[i].physicalPage = mm->AllocatePage();
+        pageTable[i].valid = ppt[i].valid;
+        pageTable[i].use = ppt[i].use;
+        pageTable[i].dirty = ppt[i].dirty;
+        pageTable[i].readOnly = ppt[i].readOnly;  
+
+        // 5. For each page,  make an actual copy of the contents of the page
+        bcopy(&(machine->mainMemory[ppt[i].physicalPage*128]),
+        &(machine->mainMemory[pageTable[i].physicalPage*128]),
+        128);
+    }
+    // Release mmLock
+    mmLock->Release();
+
+    
+}
+
+
 //----------------------------------------------------------------------
 // AddrSpace::~AddrSpace
 // 	Dealloate an address space.  Nothing for now!
