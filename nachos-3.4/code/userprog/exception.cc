@@ -24,6 +24,7 @@
 #include "copyright.h"
 #include "system.h"
 #include "syscall.h"
+#include "addrspace.h"
 
 //----------------------------------------------------------------------
 // ExceptionHandler
@@ -57,6 +58,89 @@ void doExit(int status){
     currentThread->Finish();
 }
 
+void incrementPC() {
+    int oldPCReg = machine->ReadRegister(PCReg);
+
+    machine->WriteRegister(PrevPCReg,oldPCReg);
+    machine->WriteRegister(PCReg,oldPCReg+4);
+    machine->WriteRegister(NextPCReg, oldPCReg+8);
+}
+
+void childFunction(int pid) {
+    currentThread->RestoreUserState();
+    // int addr = machine->ReadRegister(PCReg);
+
+    // Restore page table for child
+    currentThread->space->RestoreState();
+    // int pagetable = currentThread->space->GetNumPages();
+    
+
+    machine->Run();
+}
+
+int doFork(int functionAddr){
+
+    // 1. check if sufficient memory exists to create new process
+   if(currentThread->space->GetNumPages () <= mm->GetFreePageCount()) {
+        DEBUG('a', "inside the if in doFork\n");
+        // SaveUserState for the parent thread
+        currentThread->SaveUserState();
+        DEBUG('a', "after  saving state of current thread\n");
+        //Create a new address space for child by copying parent address space
+        AddrSpace* childAddrspace = new AddrSpace(currentThread->space);
+        if(childAddrspace==NULL){
+            DEBUG('a', "nooooo\n");
+        }
+        DEBUG('a', "after creating address space for child\n");
+        // Create a new thread for the child and set its addrSpace
+        Thread* childThread = new Thread("ChildThread");
+        DEBUG('a', "after creating  thread for child\n");
+        childThread->space = childAddrspace;
+        DEBUG('a', "after mapping addrespace to thread\n");
+
+        //Create a PCB for the child and connect it all up
+        PCB* childpcb = pcbManager->AllocatePCB();
+        DEBUG('a', "after allocating pcb to child\n");
+        // printf("")
+        childpcb->thread = childThread;
+        DEBUG('a', "after mapping pcb to  with child threadchild\n");
+
+        // set parent for child pcb
+        childpcb->parent = currentThread->space->pcb;
+        DEBUG('a', "after childpcb->parent = currentThread->space->pcb\n");
+        // set child for parent pcb
+        currentThread->space->pcb->AddChild(childpcb);
+        DEBUG('a', "currentThread->space->pcb->AddChild(childpcb)\n");
+        //initialize pcb in childAddSpace
+        childThread->space->pcb = childpcb;
+        DEBUG('a', "hildThread->space->pcb = childpcb;\n");
+
+        // Set up machine register for child and save it to child thread
+        machine->WriteRegister(PrevPCReg,functionAddr-4);
+        machine->WriteRegister(PCReg,functionAddr);
+        machine->WriteRegister(NextPCReg, functionAddr+4);
+        DEBUG('a', "after writing all registers\n");
+        childThread->SaveUserState();
+        currentThread->RestoreUserState();
+        childThread->Fork(childFunction, childpcb->pid);
+        DEBUG('a', "after childThread->Fork\n");
+
+        // Restore register state of parent user-level process
+        int pcreg = machine->ReadRegister(PCReg);
+        printf("Process [%d] Fork: start at address [%d] with [%d] pages memory\n",childpcb->pid, pcreg, currentThread->space->GetNumPages());
+
+        return childpcb->pid;
+        
+   }
+   else {
+    return -1;
+   }
+
+}
+
+void doYield() {
+    currentThread->Yield();
+}
 
 void
 ExceptionHandler(ExceptionType which)
@@ -68,7 +152,20 @@ ExceptionHandler(ExceptionType which)
    	interrupt->Halt();
     } 
     else if ((which == SyscallException) && (type == SC_Exit)) {
-    doExit(machine->ReadRegister(4));
+        printf("System Call: [%d] invoked Exit\n",currentThread->space->pcb->pid);
+        doExit(machine->ReadRegister(4));
+    }
+    else if ((which == SyscallException) && (type == SC_Yield)) {
+        printf("System Call: [%d] invoked Yield\n",currentThread->space->pcb->pid);
+        doYield();
+        incrementPC();
+    }
+    else if ((which == SyscallException) && (type == SC_Fork)) {
+        printf("System Call: [%d] invoked Fork\n",currentThread->space->pcb->pid);
+        DEBUG('a', "fork, initiated by user program.\n");
+        int ret = doFork(machine->ReadRegister(4));
+        machine->WriteRegister(2, ret);
+        incrementPC();
     }
     else {
 	printf("Unexpected user mode exception %d %d\n", which, type);

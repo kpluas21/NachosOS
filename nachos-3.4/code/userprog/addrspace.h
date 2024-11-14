@@ -15,6 +15,9 @@
 
 #include "copyright.h"
 #include "filesys.h"
+#include "pcb.h"
+
+class PCB;
 
 #define UserStackSize		1024 	// increase this as necessary!
 
@@ -35,6 +38,8 @@ class AddrSpace {
     unsigned int GetNumPages();    // get size of the address space
 
     TranslationEntry* GetPageTable(); // return pagetable
+
+    PCB* pcb; // the process that owns the addrespace
 
   private:
     TranslationEntry *pageTable;	// Assume linear page table translation

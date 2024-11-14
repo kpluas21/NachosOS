@@ -22,6 +22,7 @@ class List {
 
     void Prepend(int value); 	// Put item at the beginning of the list
     int Remove(); 	 	// Take item off the front of the list
+    int RemoveItem(void* item); // Delete specific item
 
     bool Empty();		// is the list empty? 
 
