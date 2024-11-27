@@ -1,4 +1,5 @@
 #include "syscall.h"
+// #include "system.h"
 
 int global_cnt=0;
 
@@ -15,16 +16,21 @@ void sum(){
 
 int main()
 {
+	// printf("in main\n");
+	
 	int i=0;
 	
 	global_cnt++;
-
+	// DEBUG('a', "before fork\n");
 	Fork(sum);
+	// DEBUG('a', "after fork\n");
 	Yield();
-
+	// DEBUG('a', "after  yield\n");
 
 	global_cnt++;
+	// printf("after count increase\n");
 	Fork(sum);
+	// printf("after second fork\n");
 
 	Yield();
 	

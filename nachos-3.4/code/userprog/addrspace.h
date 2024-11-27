@@ -38,8 +38,11 @@ class AddrSpace {
     unsigned int GetNumPages();    // get size of the address space
 
     TranslationEntry* GetPageTable(); // return pagetable
+    unsigned int Translate(unsigned int virtualAddr);
 
     PCB* pcb; // the process that owns the addrespace
+    bool valid; // is AddrSpace valid
+    void ReadFile(OpenFile *file, int offset, int virtualAddr, int size);
 
   private:
     TranslationEntry *pageTable;	// Assume linear page table translation

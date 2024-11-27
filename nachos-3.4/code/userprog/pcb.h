@@ -2,11 +2,11 @@
 #define PCB_H
 #include "list.h"
 #include "thread.h"
-// #include "pcbmanager.h"
+#include "pcbmanager.h"
 
 class Thread;
-// class PCBManager;
-// extern PCBManager* pcbManager;
+class PCBManager;
+extern PCBManager* pcbManager;
 // #define "List.h"
 
 class PCB {
@@ -18,8 +18,11 @@ class PCB {
         PCB* parent;
         List* children; // keep track of children add or delete children
         Thread* thread; //control the execution of process for which this PCB is for
+        int exitStatus;
         void AddChild(PCB* pcb);
         int RemoveChild(PCB* pcb);
+        bool HasExited();
+        void DeleteExitedChildrenSetParentNull();
 
     private:
         
