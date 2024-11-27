@@ -126,6 +126,8 @@ AddrSpace::AddrSpace(OpenFile *executable)
 			noffH.initData.virtualAddr, noffH.initData.size);
         ReadFile(executable, noffH.initData.inFileAddr, noffH.initData.virtualAddr, noffH.initData.size);
     }
+    printf("Loaded Program: [%d] code | [%d] data | [%d] bss\n",
+           noffH.code.size, noffH.initData.size, noffH.uninitData.size);
     valid = true;
 }
 
@@ -187,6 +189,9 @@ AddrSpace::AddrSpace(AddrSpace* space) {
                 128);
     }
 
+    // printf("Loaded Program: [%d] code | [%d] data | [%d] bss\n",
+    //        noffH.code.size, noffH.initData.size, noffH.uninitData.size);
+
     // Release mmLock
     mmLock->Release();
 
@@ -200,9 +205,24 @@ AddrSpace::AddrSpace(AddrSpace* space) {
 //----------------------------------------------------------------------
 
 AddrSpace::~AddrSpace()
+
 {
-   delete pageTable;
+        mmLock->Acquire();
+
+    // Get the number of pages for this address space
+    unsigned int numPagesToDeallocate = this->GetNumPages();
+
+    // Deallocate each page
+    for (unsigned int i = 0; i < numPagesToDeallocate; i++) {
+        mm->DeallocatePage(pageTable[i].physicalPage);
+    }
+
+    // Clean up the page table
+    delete pageTable;
+
+    mmLock->Release();
 }
+
 
 //----------------------------------------------------------------------
 // AddrSpace::InitRegisters

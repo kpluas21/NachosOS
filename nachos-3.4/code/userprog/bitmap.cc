@@ -96,6 +96,7 @@ BitMap::Find()
 {
     for (int i = 0; i < numBits; i++)
 	if (!Test(i)) {
+        // printf("%d is the index\n",i);
 	    Mark(i);
 	    return i;
 	}

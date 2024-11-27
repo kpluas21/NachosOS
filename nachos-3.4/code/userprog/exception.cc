@@ -68,6 +68,8 @@ void doExit(int status){
     // Manage PCB memory As a child process
     if(pcb->parent == NULL) pcbManager->DeallocatePCB(pcb);
 
+    
+
     // Delete address space only after use is completed
     delete currentThread->space;
 
@@ -227,63 +229,6 @@ int doFork(int functionAddr) {
 
 // }
 
-// int doExec (char* filename){
-
-//     // open file and check validity
-//     OpenFile *executable = fileSystem->Open(filename);
-//     AddrSpace *space;
-
-//     if (executable == NULL) {
-// 	printf("Unable to open file %s\n", filename);
-// 	return -1;
-//     }
-
-//     // delete current address space but store current pcb
-//     PCB* pcb = currentThread->space->pcb;
-//     if (pcb == NULL) {
-// 	printf("Unable get pcb id %d\n", pcb->pid);
-// 	return -1;
-//     }
-//     delete currentThread->space;
-
-//     //create address space
-//     space = new AddrSpace(executable);
-
-//     delete executable;
-
-//     //check if Addrspace creation was succesful
-//     if(space->valid != true) {
-//         printf("Could not create AddrSpace\n");
-//         return -1;
-//     }
-
-//     //create pcb for the new addrspace - reused from deleted address space
-//     space->pcb = pcb;
-
-
-//     //Set the addrespace for currentThread
-//     currentThread->space = space;
-
-//     // intialize registers for new addrspace
-//     space->InitRegisters();		// set the initial register values
-
-//     // intialize the page table
-//     space->RestoreState();		// load page table register
-
-//     machine->Run();	
-
-//     ASSERT(FALSE) //Execution never reaches here
-
-//     return 0;
-
-
-
-// }
-
-void doYield() {
-    currentThread->Yield();
-}
-
 int doExec (char* filename){
 
     // open file and check validity
@@ -295,8 +240,21 @@ int doExec (char* filename){
 	return -1;
     }
 
+    // delete current address space but store current pcb
+    PCB* pcb = currentThread->space->pcb;
+    if (pcb == NULL) {
+	printf("Unable get pcb id %d\n", pcb->pid);
+	return -1;
+    }
+    delete currentThread->space;
+
+    printf("Exec Program: [%d] loading [%s]\n", pcb->pid, filename);
+
     //create address space
     space = new AddrSpace(executable);
+    
+
+    delete executable;
 
     //check if Addrspace creation was succesful
     if(space->valid != true) {
@@ -304,18 +262,9 @@ int doExec (char* filename){
         return -1;
     }
 
-    //create pcb for the new addrspace
-    PCB* pcb = pcbManager->AllocatePCB();
-    //intialize parent
-    pcb->parent = currentThread->space->pcb->parent;
+    //create pcb for the new addrspace - reused from deleted address space
     space->pcb = pcb;
 
-    // Set the thread for the new pcb
-
-    pcb->thread = currentThread;
-
-    //delete current address space
-    delete currentThread->space;
 
     //Set the addrespace for currentThread
     currentThread->space = space;
@@ -335,6 +284,62 @@ int doExec (char* filename){
 
 
 }
+
+void doYield() {
+    currentThread->Yield();
+}
+
+// int doExec (char* filename){
+
+//     // open file and check validity
+//     OpenFile *executable = fileSystem->Open(filename);
+//     AddrSpace *space;
+
+//     if (executable == NULL) {
+// 	printf("Unable to open file %s\n", filename);
+// 	return -1;
+//     }
+
+//     //create address space
+//     space = new AddrSpace(executable);
+
+//     //check if Addrspace creation was succesful
+//     if(space->valid != true) {
+//         printf("Could not create AddrSpace\n");
+//         return -1;
+//     }
+
+//     //create pcb for the new addrspace
+//     PCB* pcb = pcbManager->AllocatePCB();
+//     //intialize parent
+//     pcb->parent = currentThread->space->pcb->parent;
+//     space->pcb = pcb;
+
+//     // Set the thread for the new pcb
+
+//     pcb->thread = currentThread;
+
+//     //delete current address space
+//     delete currentThread->space;
+
+//     //Set the addrespace for currentThread
+//     currentThread->space = space;
+
+//     // intialize registers for new addrspace
+//     space->InitRegisters();		// set the initial register values
+
+//     // intialize the page table
+//     space->RestoreState();		// load page table register
+
+//     machine->Run();	
+
+//     ASSERT(FALSE) //Execution never reaches here
+
+//     return 0;
+
+
+
+// }
 
 
 
