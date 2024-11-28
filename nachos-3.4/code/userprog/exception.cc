@@ -285,6 +285,34 @@ int doExec (char* filename){
 
 }
 
+
+void doJoin() {
+    // Check if the current process has any children
+    if (currentThread->space->pcb->children->IsEmpty()) {
+        DEBUG('a', "No children to join.\n");
+        return;
+    }
+
+    // Get the first child of the current process
+    PCB *childPCB = currentThread->space->pcb->children->RemoveFront();
+    if (childPCB == NULL) {
+        DEBUG('a', "Failed to get child PCB.\n");
+        return;
+    }
+
+    // Wait for the child to finish executing
+    while (!childPCB->HasExited()) {
+        currentThread->Yield();
+    }
+
+    // Get the exit status of the child
+    int exitStatus = childPCB->exitStatus;
+    printf("Process [%d] Join: [%d] exited with [%d]\n", currentThread->space->pcb->pid, childPCB->pid, exitStatus);
+
+    // Deallocate the child PCB
+    pcbManager->DeallocatePCB(childPCB);
+}
+
 void doYield() {
     currentThread->Yield();
 }
