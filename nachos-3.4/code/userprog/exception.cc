@@ -294,7 +294,7 @@ void doJoin() {
     }
 
     // Get the first child of the current process
-    PCB *childPCB = currentThread->space->pcb->children->RemoveFront();
+    PCB *childPCB = (PCB*)currentThread->space->pcb->children->Remove();
     if (childPCB == NULL) {
         DEBUG('a', "Failed to get child PCB.\n");
         return;
