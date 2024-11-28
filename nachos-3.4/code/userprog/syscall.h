@@ -29,6 +29,7 @@
 #define SC_Close	8
 #define SC_Fork		9
 #define SC_Yield	10
+#define SC_Kill	    11
 
 #ifndef IN_ASM
 
@@ -63,6 +64,8 @@ SpaceId Exec(char *name);
  * Return the exit status.
  */
 int Join(SpaceId id); 	
+
+
  
 
 /* File system operations: Create, Open, Read, Write, Close
@@ -117,13 +120,16 @@ void Close(OpenFileId id);
 /* Fork a thread to run a procedure ("func") in the *same* address space 
  * as the current thread.
  */
-void Fork(void (*func)());
+int Fork(void (*func)());
 
 /* Yield the CPU to another runnable thread, whether in this address space 
  * or not. 
  */
 void Yield();	
 
+/* return 0 if succesful and -1 if not
+ */
+int Kill(SpaceId id); 	
 
 
 #endif /* IN_ASM */

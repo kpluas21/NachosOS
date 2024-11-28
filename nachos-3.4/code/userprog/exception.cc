@@ -53,7 +53,7 @@ void doExit(int status){
     // DEBUG('a', "in do exit.\n");
     int pid = currentThread->space->pcb->pid;
 
-    printf("System Call: [%d] invoked [Exit]\n", pid);
+    printf("System Call: [%d] invoked Exit\n", pid);
     printf ("Process [%d] exits with [%d]\n", pid, status);
 
 
@@ -366,6 +366,43 @@ char* readString(int virtualAddr) {
     return str;
 }
 
+int doKill(int pid){
+
+    //check if pid is valid and if not return -1
+    PCB* killpcb = pcbManager->GetPCB(pid);
+    if (killpcb==NULL){return -1;}
+
+    //if pid is of current process - simply exit
+    if (killpcb == currentThread->space->pcb){
+        doExit(0);
+        return 0;
+    }
+
+    killpcb->DeleteExitedChildrenSetParentNull();
+
+    // Manage PCB memory As a child process
+    if(killpcb->parent == NULL) pcbManager->DeallocatePCB(killpcb);
+
+    
+
+    // Delete address space only after use is completed
+    delete killpcb->thread->space;
+
+    // Finish current thread only after all the cleanup is done
+    // because currentThread marks itself to be destroyed (by a different thread)
+    // and then puts itself to sleep -- thus anything after this statement will not be executed!
+    // killpcb->thread->Finish();
+    scheduler->RemoveThread(killpcb->thread);
+    printf("Process [%d] killed process [%d]\n",currentThread->space->pcb->pid,killpcb->pid);
+
+
+
+    return 0;
+
+
+}
+
+
 void
 ExceptionHandler(ExceptionType which)
 {
@@ -399,6 +436,12 @@ ExceptionHandler(ExceptionType which)
         int virtAddr = machine->ReadRegister(4);
         char* filename = readString(virtAddr);
         int ret = doExec(filename);
+        machine->WriteRegister(2, ret);
+        incrementPC();
+    }
+    else if ((which == SyscallException) && (type == SC_Kill)) {
+        printf("System Call: [%d] invoked Kill\n",currentThread->space->pcb->pid);
+        int ret = doKill(machine->ReadRegister(4));
         machine->WriteRegister(2, ret);
         incrementPC();
     }
