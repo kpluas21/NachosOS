@@ -293,3 +293,25 @@ List::SortedRemove(int *keyPtr)
     return thing;
 }
 
+//----------------------------------------------------------------------
+// List::GetLength()
+//      Return the length of the list.
+// 
+// Returns:
+//	return the length of the list.
+//	
+//----------------------------------------------------------------------
+
+int List::GetLength() {
+    int length = 0;
+    ListElement *current = first;
+
+    while (current != NULL) {
+        length++;
+        current = current->next;
+    }
+
+    return length;
+}
+
+

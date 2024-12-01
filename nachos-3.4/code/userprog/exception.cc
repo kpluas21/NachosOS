@@ -154,15 +154,16 @@ int doFork(int functionAddr) {
         currentThread->RestoreUserState();
         
 
-        printf("Process [%d] Fork: start at address [%x] with [%d] pages memory\n",currentThread->space->pcb->pid, pcreg, currentThread->space->GetNumPages());
+        printf("Process [%d] Fork: start at address [%#x] with [%d] pages memory\n",currentThread->space->pcb->pid, pcreg, currentThread->space->GetNumPages());
 
         DEBUG('a', "Fork successful: Parent [%d], Child [%d].\n",
               currentThread->space->pcb->pid, childPCB->pid);
 
         return childPCB->pid; // Return child PID
     } else {
+        int total_child = currentThread->space->pcb->children->GetLength();
         DEBUG('a', "Insufficient memory to fork process.\n");
-        printf("Insufficient memory to fork process.\n");
+        printf("Not Enough Memory for Child Process [%d].\n",total_child+1);
         return -1;
     }
 }
@@ -285,19 +286,18 @@ int doExec (char* filename){
 
 }
 
-
-void doJoin() {
+int doJoin(int pid) {
     // Check if the current process has any children
     if (currentThread->space->pcb->children->IsEmpty()) {
         DEBUG('a', "No children to join.\n");
-        return;
+        return -1;
     }
 
     // Get the first child of the current process
     PCB *childPCB = (PCB*)currentThread->space->pcb->children->Remove();
     if (childPCB == NULL) {
         DEBUG('a', "Failed to get child PCB.\n");
-        return;
+        return -1;
     }
 
     // Wait for the child to finish executing
@@ -307,11 +307,14 @@ void doJoin() {
 
     // Get the exit status of the child
     int exitStatus = childPCB->exitStatus;
-    printf("Process [%d] Join: [%d] exited with [%d]\n", currentThread->space->pcb->pid, childPCB->pid, exitStatus);
+    // printf("Process [%d] Join: [%d] exited with [%d]\n", currentThread->space->pcb->pid, childPCB->pid, exitStatus);
 
     // Deallocate the child PCB
     pcbManager->DeallocatePCB(childPCB);
+    return exitStatus;
 }
+
+
 
 void doYield() {
     currentThread->Yield();
@@ -449,6 +452,15 @@ ExceptionHandler(ExceptionType which)
         DEBUG('a', "Yield, before do yield.\n");
         doYield();
         DEBUG('a', "Yield, after do yield.\n");
+        incrementPC();
+    }
+    else if ((which == SyscallException) && (type == SC_Join)) {
+        printf("System Call: [%d] invoked Join\n",currentThread->space->pcb->pid);
+        DEBUG('a', "join, before dojoin.\n");
+        int ret = doJoin(machine->ReadRegister(4));
+        DEBUG('a', "join, before write.\n");
+        machine->WriteRegister(2, ret);
+        // DEBUG('a', "Yield, after do yield.\n");
         incrementPC();
     }
     else if ((which == SyscallException) && (type == SC_Fork)) {

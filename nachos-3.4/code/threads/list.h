@@ -53,6 +53,7 @@ class List {
     void Mapcar(VoidFunctionPtr func);	// Apply "func" to every element 
 					// on the list
     bool IsEmpty();		// is the list empty? 
+    int GetLength();  // return length of the list
     
 
     // Routines to put/get items on/off list in order (sorted by key)
